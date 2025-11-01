@@ -12,20 +12,19 @@
             <h1>Number System Converter.</h1>
             <label for="From">From:</label>
             <select name="from-option" id="from-option">
-                <option value="binary">Binary</option>
-                <option value="decimal">Decimal</option>
-                <option value="octal">Octal</option>
-                <option value="hexadecimal">Hexadecimal</option>
-
+                <option value="binary" {% if from_option == 'binary' %}selected{% endif %}>Binary</option>
+                <option value="decimal" {% if from_option == 'decimal' %}selected{% endif %}>Decimal</option>
+                <option value="octal" {% if from_option == 'octal' %}selected{% endif %}>Octal</option>
+                <option value="hexadecimal" {% if from_option == 'hexadecimal' %}selected{% endif %}>Hexadecimal</option>
             </select><br>
             <label for="To">To:</label>
             <select name="to-option" id="to-option">
-                <option value="binary">Binary</option>
-                <option value="decimal">Decimal</option>
-                <option value="octal">Octal</option>
-                <option value="hexadecimal">Hexadecimal</option>
+                <option value="binary" {% if to_option == 'binary' %}selected{% endif %}>Binary</option>
+                <option value="decimal" {% if to_option == 'decimal' %}selected{% endif %}>Decimal</option>
+                <option value="octal" {% if to_option == 'octal' %}selected{% endif %}>Octal</option>
+                <option value="hexadecimal" {% if to_option == 'hexadecimal' %}selected{% endif %}>Hexadecimal</option>
             </select><br>
-            <input type="text" name="input-number" placeholder="Enter the Value here" required autocomplete="off"><br>
+            <input type="text" name="input-number" placeholder="Enter the Value here" autocomplete="off"><br>
             <button type="submit">Convert</button>
             <div class="result">
                 {{result}}
