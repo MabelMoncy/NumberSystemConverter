@@ -29,6 +29,13 @@ body::before {
     pointer-events: none;
 }
 
+form {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .form-space {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(15px);
@@ -41,6 +48,7 @@ body::before {
     width: 100%;
     position: relative;
     border: 1px solid rgba(59, 130, 246, 0.2);
+    margin: 0 auto;
 }
 
 h1 {
@@ -103,7 +111,6 @@ select:hover, input[type="text"]:hover {
     box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15);
 }
 
-/* Keep default dropdown appearance */
 select {
     cursor: pointer;
     appearance: auto;
@@ -116,7 +123,6 @@ input[type="text"]::placeholder {
     font-style: italic;
 }
 
-/* Futuristic Button Design */
 button {
     width: 100%;
     padding: 16px;
@@ -205,7 +211,6 @@ button:active {
     display: none;
 }
 
-/* Floating animation elements */
 @keyframes float {
     0%, 100% { transform: translateY(0px) rotate(0deg); }
     50% { transform: translateY(-15px) rotate(180deg); }
@@ -245,23 +250,69 @@ button:active {
 }
 
 /* Responsive design */
-@media (max-width: 500px) {
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+    }
+    
     .form-space {
-        padding: 30px 25px;
-        margin: 10px;
+        padding: 35px 30px;
+        max-width: 100%;
     }
     
     h1 {
-        font-size: 1.9em;
+        font-size: 2em;
+    }
+}
+
+@media (max-width: 500px) {
+    body {
+        padding: 10px;
+    }
+    
+    .form-space {
+        padding: 30px 25px;
+        margin: 0 auto;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+        margin-bottom: 30px;
     }
     
     select, input[type="text"] {
-        padding: 12px 16px;
+        padding: 13px 18px;
         font-size: 15px;
     }
     
     button {
         padding: 14px;
         font-size: 16px;
+    }
+    
+    .result {
+        padding: 18px;
+        font-size: 15px;
+        min-height: 55px;
+    }
+}
+
+@media (max-width: 350px) {
+    .form-space {
+        padding: 25px 20px;
+    }
+    
+    h1 {
+        font-size: 1.6em;
+    }
+    
+    select, input[type="text"] {
+        padding: 12px 15px;
+        font-size: 14px;
+    }
+    
+    button {
+        padding: 12px;
+        font-size: 15px;
     }
 }
