@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number System Converter</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <form action="/calculate" method="POST">
+        <div class="form-space">
+            <h1>Number System Converter.</h1>
+            <label for="From">From:</label>
+            <select name="from-option" id="from-option">
+                <option value="binary">Binary</option>
+                <option value="decimal">Decimal</option>
+                <option value="octal">Octal</option>
+                <option value="hexadecimal">Hexadecimal</option>
+
+            </select><br>
+            <label for="To">To:</label>
+            <select name="to-option" id="to-option">
+                <option value="binary">Binary</option>
+                <option value="decimal">Decimal</option>
+                <option value="octal">Octal</option>
+                <option value="hexadecimal">Hexadecimal</option>
+            </select><br>
+            <input type="text" name="input-number" placeholder="Enter the Value here" required autocomplete="off"><br>
+            <button type="submit">Convert</button>
+            <div class="result">
+                {{result}}
+            </div>
+        </div>
+    </form>
+</body>
+</html>
