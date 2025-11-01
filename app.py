@@ -1,82 +1,81 @@
-from flask import Flask, render_template, request, redirect, url_for  # importing neccessary modules and classes
-app = Flask(__name__)  # app is the instance of the class 'Flask'
+from flask import Flask, render_template, request, redirect, url_for
+app = Flask(__name__)
 
-@app.route('/')  # Route for home screen
+@app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('index.html', from_option='binary', to_option='decimal')
 
 @app.route('/calculate', methods=['POST'])
-def check_convertion():  # Check for the valid options
-    from_option = request.form.get('from-option')  # alwyas binary in this case.
+def check_convertion():
+    from_option = request.form.get('from-option')
     to_option = request.form.get('to-option')
     input_number = request.form.get('input-number')
 
-    # basic guard: ensure input exists (prevents crashes when input_number is None)
+    # basic guard: ensure input exists
     if input_number is None or str(input_number).strip() == "":
-        return render_template('index.html', result="Please enter a number to convert.")
+        return render_template('index.html', 
+                             result="Please enter a number to convert.",
+                             from_option=from_option,
+                             to_option=to_option)
 
-    # normalize input string (but keep semantics same)
+    # normalize input string
     input_number = str(input_number).strip()
 
-    # All same system conversions are done:
+    # All same system conversions
     errMssg = "You chose the same convertion! Try different one."
-    if from_option == "binary" and to_option == "binary":
-        return render_template('index.html', result=errMssg)
-    if from_option == "decimal" and to_option == "decimal":
-        return render_template('index.html', result=errMssg)
-    if from_option == "octal" and to_option == "octal":
-        return render_template('index.html', result=errMssg)
-    if from_option == "hexadecimal" and to_option == "hexadecimal":
-        return render_template('index.html', result=errMssg)
+    if from_option == to_option:
+        return render_template('index.html', 
+                             result=errMssg,
+                             from_option=from_option,
+                             to_option=to_option)
 
     # All Binary conversions
-    if from_option == "binary" and to_option == "decimal":  # "binary">>is taken from value=" "
+    if from_option == "binary" and to_option == "decimal":
         result = binary_to_decimal(input_number)
-        return render_template('index.html', result=result)
-    if from_option == "binary" and to_option == "octal":  # "octal">> is taken from value=" "
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
+    if from_option == "binary" and to_option == "octal":
         result = binary_to_octal(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
     if from_option == "binary" and to_option == "hexadecimal":
         result = binary_to_hexadecimal(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
 
     # All Decimal conversions
     if from_option == "decimal" and to_option == "binary":
         result = decimal_to_binary(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
     if from_option == "decimal" and to_option == "octal":
         result = decimal_to_octal(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
     if from_option == "decimal" and to_option == "hexadecimal":
         result = decimal_to_hexadecimal(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
 
     # All Octal Conversions
     if from_option == "octal" and to_option == "binary":
         result = octal_to_binary(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
     if from_option == "octal" and to_option == "decimal":
         result = octal_to_decimal(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
     if from_option == "octal" and to_option == "hexadecimal":
         result = octal_to_hexadecimal(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
 
     # All Hexadecimal conversion
     if from_option == "hexadecimal" and to_option == "binary":
         result = hexadecimal_to_binary(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
     if from_option == "hexadecimal" and to_option == "decimal":
         result = hexadecimal_to_decimal(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
     if from_option == "hexadecimal" and to_option == "octal":
         result = hexadecimal_to_octal(input_number)
-        return render_template('index.html', result=result)
+        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
     return None
 
 # Binary to other number system convertions.
 def binary_to_decimal(binary_input):
-    # defensive: ensure string and strip spaces
     if binary_input is None:
         return "Binary input missing!"
     binary_input = str(binary_input).strip()
@@ -88,7 +87,6 @@ def binary_to_decimal(binary_input):
     if '.' in binary_input:
         try:
             integer_part, fractional_part = binary_input.split('.')
-            # validate digits
             for digit in integer_part + fractional_part:
                 if digit not in ['0', '1']:
                     return "Binary inputs can only be 0s and 1s"
@@ -124,15 +122,12 @@ def binary_to_octal(binary_input):
         integer_part_remainder = []
         fractional_part_value = []
         decimal_value = binary_to_decimal(binary_input)
-        # if binary_to_decimal returned an error string, propagate it
         if isinstance(decimal_value, str):
             return decimal_value
 
-        # Since we have a decimal number here we cannot split it using the spilt() function instead we do:
-        integer_part = int(decimal_value)  # This will convert the decimal number to integer removing the fractional part
-        fractional_part = decimal_value - integer_part  # This will give the fractional part
+        integer_part = int(decimal_value)
+        fractional_part = decimal_value - integer_part
 
-        # integer part conversion
         if integer_part == 0:
             integer_part_remainder.append('0')
         else:
@@ -141,7 +136,6 @@ def binary_to_octal(binary_input):
                 integer_part_remainder.append(str(remainder))
                 integer_part //= 8
 
-        # Limit to 5 digits max for fractional part
         for _ in range(5):
             fractional_part *= 8
             digit = int(fractional_part)
@@ -170,19 +164,16 @@ def binary_to_hexadecimal(binary_input):
         '1100': 'C', '1101': 'D', '1110': 'E', '1111': 'F'
     }
 
-    # Separate integer and fractional parts
     if '.' in binary_input:
         integer_part, fractional_part = binary_input.split('.')
     else:
         integer_part = binary_input
         fractional_part = ''
 
-    # validate binary digits
     for ch in integer_part + fractional_part:
         if ch not in ('0', '1', ''):
             return "Binary inputs can only be 0s and 1s"
 
-    # --- Integer part ---
     while len(integer_part) % 4 != 0:
         integer_part = '0' + integer_part
 
@@ -191,7 +182,6 @@ def binary_to_hexadecimal(binary_input):
         four_bit_group = integer_part[i:i+4]
         hex_integer += hexadecimal_values.get(four_bit_group, '?')
 
-    # --- Fractional part ---
     hex_fraction = ''
     if fractional_part:
         while len(fractional_part) % 4 != 0:
@@ -200,13 +190,11 @@ def binary_to_hexadecimal(binary_input):
             four_bit_group = fractional_part[i:i+4]
             hex_fraction += hexadecimal_values.get(four_bit_group, '?')
 
-    # Combine result
     if fractional_part:
         return hex_integer + '.' + hex_fraction
     else:
         return hex_integer
 
-# Decimal to other number system conversion
 def decimal_to_binary(decimal_input):
     if decimal_input is None:
         return "Decimal input missing!"
@@ -255,8 +243,6 @@ def decimal_to_binary(decimal_input):
             return binary_number
         else:
             return "0"
-
-# ---------- Decimal to other number systems ----------
 
 def decimal_to_octal(decimal_input):
     try:
@@ -320,8 +306,6 @@ def decimal_to_hexadecimal(decimal_input):
     except ValueError:
         return "Invalid decimal input!"
 
-# ---------- Octal to other number systems ----------
-
 def octal_to_binary(octal_input):
     if octal_input is None:
         return "Octal input missing!"
@@ -342,7 +326,6 @@ def octal_to_decimal(octal_input):
         return "Invalid octal input!"
     octal_input = str(octal_input).strip()
     try:
-        # validation: only digits 0–7 and optionally one '.'
         if octal_input.count('.') > 1:
             return "Invalid octal input!"
         for ch in octal_input:
@@ -351,7 +334,6 @@ def octal_to_decimal(octal_input):
             if ch not in '01234567':
                 return "Invalid octal input!"
 
-        # conversion
         if '.' in octal_input:
             integer_part, fractional_part = octal_input.split('.')
             result = 0
@@ -380,8 +362,6 @@ def octal_to_hexadecimal(octal_input):
     except:
         return "Conversion error!"
 
-# ---------- Hexadecimal to other number systems ----------
-
 def hexadecimal_to_binary(hex_input):
     if hex_input is None:
         return "Invalid hexadecimal input!"
@@ -395,7 +375,6 @@ def hexadecimal_to_binary(hex_input):
             'C': '1100', 'D': '1101', 'E': '1110', 'F': '1111'
         }
 
-        # Validate characters
         for ch in hex_input:
             if ch == '.':
                 continue
@@ -435,7 +414,7 @@ def hexadecimal_to_decimal(hex_input):
         return "Invalid hexadecimal input!"
 
 def hexadecimal_to_octal(hex_input):
-    if hex_input is None:
+    if hexadecimal_input is None:
         return "Invalid hexadecimal input!"
     hex_input = str(hex_input).strip()
     try:
