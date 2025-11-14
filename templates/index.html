@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <form action="/calculate" method="POST">
+    <form id="converter-form">
         <div class="form-space">
             <h1>Number System Converter.</h1>
             <label for="From">From:</label>
@@ -26,10 +26,56 @@
             </select><br>
             <input type="text" name="input-number" placeholder="Enter the Value here" autocomplete="off"><br>
             <button type="submit">Convert</button>
-            <div class="result">
+            <div class="result" id="result-display">
                 {{result}}
             </div>
         </div>
     </form>
+    <script>
+        // Wait for the document to be fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Get the form and the result display element
+            const converterForm = document.getElementById('converter-form');
+            const resultDisplay = document.getElementById('result-display');
+
+            // Add an event listener for the form's 'submit' event
+            converterForm.addEventListener('submit', async (event) => {
+                
+                // 1. PREVENT THE DEFAULT FORM SUBMISSION (stops the page reload)
+                event.preventDefault();
+
+                // 2. Show a loading message
+                resultDisplay.textContent = 'Converting...';
+
+                try {
+                    // 3. Create a FormData object from the form
+                    const formData = new FormData(converterForm);
+
+                    // 4. Send the data to the server using the Fetch API
+                    const response = await fetch('/calculate', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    // 5. Check if the network response is ok
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    // 6. Parse the JSON data returned from Flask
+                    const data = await response.json();
+
+                    // 7. Update the result display with the result from the JSON
+                    resultDisplay.textContent = data.result;
+
+                } catch (error) {
+                    // 8. Handle any errors during the fetch
+                    console.error('Fetch Error:', error);
+                    resultDisplay.textContent = 'Error: Could not connect to server.';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

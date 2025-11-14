@@ -1,78 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-    return render_template('index.html', from_option='binary', to_option='decimal')
-
-@app.route('/calculate', methods=['POST'])
-def check_convertion():
-    from_option = request.form.get('from-option')
-    to_option = request.form.get('to-option')
-    input_number = request.form.get('input-number')
-
-    # basic guard: ensure input exists
-    if input_number is None or str(input_number).strip() == "":
-        return render_template('index.html', 
-                             result="Please enter a number to convert.",
-                             from_option=from_option,
-                             to_option=to_option)
-
-    # normalize input string
-    input_number = str(input_number).strip()
-
-    # All same system conversions
-    errMssg = "You chose the same convertion! Try different one."
-    if from_option == to_option:
-        return render_template('index.html', 
-                             result=errMssg,
-                             from_option=from_option,
-                             to_option=to_option)
-
-    # All Binary conversions
-    if from_option == "binary" and to_option == "decimal":
-        result = binary_to_decimal(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-    if from_option == "binary" and to_option == "octal":
-        result = binary_to_octal(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-    if from_option == "binary" and to_option == "hexadecimal":
-        result = binary_to_hexadecimal(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-
-    # All Decimal conversions
-    if from_option == "decimal" and to_option == "binary":
-        result = decimal_to_binary(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-    if from_option == "decimal" and to_option == "octal":
-        result = decimal_to_octal(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-    if from_option == "decimal" and to_option == "hexadecimal":
-        result = decimal_to_hexadecimal(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-
-    # All Octal Conversions
-    if from_option == "octal" and to_option == "binary":
-        result = octal_to_binary(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-    if from_option == "octal" and to_option == "decimal":
-        result = octal_to_decimal(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-    if from_option == "octal" and to_option == "hexadecimal":
-        result = octal_to_hexadecimal(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-
-    # All Hexadecimal conversion
-    if from_option == "hexadecimal" and to_option == "binary":
-        result = hexadecimal_to_binary(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-    if from_option == "hexadecimal" and to_option == "decimal":
-        result = hexadecimal_to_decimal(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-    if from_option == "hexadecimal" and to_option == "octal":
-        result = hexadecimal_to_octal(input_number)
-        return render_template('index.html', result=result, from_option=from_option, to_option=to_option)
-    return None
+# --- Helper Functions (Define ALL functions first) ---
 
 # Binary to other number system convertions.
 def binary_to_decimal(binary_input):
@@ -86,14 +15,29 @@ def binary_to_decimal(binary_input):
 
     if '.' in binary_input:
         try:
+            # Check for multiple decimal points
+            if binary_input.count('.') > 1:
+                return "Invalid binary input!"
+                
             integer_part, fractional_part = binary_input.split('.')
+            
+            # Handle empty parts like ".101" or "101."
+            if not integer_part:
+                integer_part = "0"
+            if not fractional_part:
+                fractional_part = "0"
+
             for digit in integer_part + fractional_part:
                 if digit not in ['0', '1']:
                     return "Binary inputs can only be 0s and 1s"
+            
+            # Convert integer part
             for i in range(len(integer_part)):
                 digit = int(integer_part[i])
                 power = len(integer_part) - i - 1
                 result = result + digit * (2 ** power)
+            
+            # Convert fractional part
             for j in range(len(fractional_part)):
                 digit = int(fractional_part[j])
                 result = result + digit * (2 ** -(j + 1))
@@ -111,48 +55,6 @@ def binary_to_decimal(binary_input):
             result = result + digit * (2 ** power)
         return result
 
-def binary_to_octal(binary_input):
-    if binary_input is None:
-        return "Binary input missing!"
-    binary_input = str(binary_input).strip()
-    try:
-        for digit in binary_input:
-            if digit not in ['0', '1', '.']:
-                return "Binary inputs can only be 0s and 1s"
-        integer_part_remainder = []
-        fractional_part_value = []
-        decimal_value = binary_to_decimal(binary_input)
-        if isinstance(decimal_value, str):
-            return decimal_value
-
-        integer_part = int(decimal_value)
-        fractional_part = decimal_value - integer_part
-
-        if integer_part == 0:
-            integer_part_remainder.append('0')
-        else:
-            while integer_part > 0:
-                remainder = integer_part % 8
-                integer_part_remainder.append(str(remainder))
-                integer_part //= 8
-
-        for _ in range(5):
-            fractional_part *= 8
-            digit = int(fractional_part)
-            fractional_part_value.append(str(digit))
-            fractional_part -= digit
-            if fractional_part == 0:
-                break
-
-        if fractional_part_value:
-            octal_number = ''.join(reversed(integer_part_remainder)) + '.' + ''.join(fractional_part_value)
-        else:
-            octal_number = ''.join(reversed(integer_part_remainder))
-        return octal_number
-
-    except ValueError:
-        return "Something went wrong!"
-
 def binary_to_hexadecimal(binary_input):
     if binary_input is None:
         return "Binary input missing!"
@@ -165,7 +67,13 @@ def binary_to_hexadecimal(binary_input):
     }
 
     if '.' in binary_input:
+        if binary_input.count('.') > 1:
+            return "Invalid binary input!"
         integer_part, fractional_part = binary_input.split('.')
+        if not integer_part:
+            integer_part = "0"
+        if not fractional_part:
+            fractional_part = "0"
     else:
         integer_part = binary_input
         fractional_part = ''
@@ -174,23 +82,33 @@ def binary_to_hexadecimal(binary_input):
         if ch not in ('0', '1', ''):
             return "Binary inputs can only be 0s and 1s"
 
+    # Pad integer part
     while len(integer_part) % 4 != 0:
         integer_part = '0' + integer_part
+    if not integer_part: # Handle case of just ".101"
+        integer_part = "0000"
 
     hex_integer = ''
     for i in range(0, len(integer_part), 4):
         four_bit_group = integer_part[i:i+4]
         hex_integer += hexadecimal_values.get(four_bit_group, '?')
+    
+    # Remove leading zeros unless it's the only digit
+    if len(hex_integer) > 1 and hex_integer.startswith('0'):
+       hex_integer = hex_integer.lstrip('0')
 
     hex_fraction = ''
     if fractional_part:
+        # Pad fractional part
         while len(fractional_part) % 4 != 0:
             fractional_part = fractional_part + '0'
         for i in range(0, len(fractional_part), 4):
             four_bit_group = fractional_part[i:i+4]
             hex_fraction += hexadecimal_values.get(four_bit_group, '?')
+        # Remove trailing zeros from fraction
+        hex_fraction = hex_fraction.rstrip('0')
 
-    if fractional_part:
+    if hex_fraction:
         return hex_integer + '.' + hex_fraction
     else:
         return hex_integer
@@ -199,127 +117,101 @@ def decimal_to_binary(decimal_input):
     if decimal_input is None:
         return "Decimal input missing!"
     decimal_input = str(decimal_input).strip()
-    if '.' in decimal_input:
-        try:
-            decimal_number = float(decimal_input)
-            integer_part = int(decimal_number)
-            fractional_part = decimal_number - integer_part
-            remainders = []
+    try:
+        decimal_number = float(decimal_input)
+    except ValueError:
+        return "Invalid decimal input!"
 
-            if integer_part:
-                while integer_part > 0:
-                    remainder = integer_part % 2
-                    remainders.append(str(remainder))
-                    integer_part //= 2
-                binary_number = ''.join(reversed(remainders))
-            else:
-                binary_number = "0"
+    integer_part = int(decimal_number)
+    fractional_part = decimal_number - integer_part
+    remainders = []
 
-            if fractional_part:
-                binary_fraction = []
-                count = 0
-                while fractional_part > 0 and count < 10:
-                    fractional_part = fractional_part * 2
-                    binary_bit = int(fractional_part)
-                    binary_fraction.append(str(binary_bit))
-                    fractional_part -= binary_bit
-                    count += 1
-                binary_number = binary_number + '.' + ''.join(binary_fraction)
-            return binary_number
-        except ValueError:
-            return "Error occured"
+    if integer_part == 0:
+        binary_number = "0"
     else:
-        try:
-            integer_part = int(decimal_input)
-        except ValueError:
-            return "Error occured"
-        remainders = []
-        if integer_part:
-            while integer_part > 0:
-                remainder = integer_part % 2
-                remainders.append(str(remainder))
-                integer_part //= 2
-            binary_number = ''.join(reversed(remainders))
-            return binary_number
-        else:
-            return "0"
+        while integer_part > 0:
+            remainder = integer_part % 2
+            remainders.append(str(remainder))
+            integer_part //= 2
+        binary_number = ''.join(reversed(remainders))
+
+    if fractional_part > 0:
+        binary_fraction = []
+        count = 0
+        # Limit precision to avoid infinite loops
+        while fractional_part > 0 and count < 10:
+            fractional_part = fractional_part * 2
+            binary_bit = int(fractional_part)
+            binary_fraction.append(str(binary_bit))
+            fractional_part -= binary_bit
+            count += 1
+        binary_number = binary_number + '.' + ''.join(binary_fraction)
+    
+    return binary_number
 
 def decimal_to_octal(decimal_input):
     try:
         decimal_number = float(decimal_input)
-        integer_part = int(decimal_number)
-        fractional_part = decimal_number - integer_part
-        remainders = []
-
-        if integer_part == 0:
-            octal_number = '0'
-        else:
-            while integer_part > 0:
-                remainder = integer_part % 8
-                remainders.append(str(remainder))
-                integer_part //= 8
-            octal_number = ''.join(reversed(remainders))
-
-        if fractional_part:
-            octal_fraction = []
-            count = 0
-            while fractional_part > 0 and count < 10:
-                fractional_part *= 8
-                digit = int(fractional_part)
-                octal_fraction.append(str(digit))
-                fractional_part -= digit
-                count += 1
-            octal_number = octal_number + '.' + ''.join(octal_fraction)
-        return octal_number
     except ValueError:
         return "Invalid decimal input!"
+        
+    integer_part = int(decimal_number)
+    fractional_part = decimal_number - integer_part
+    remainders = []
+
+    if integer_part == 0:
+        octal_number = '0'
+    else:
+        while integer_part > 0:
+            remainder = integer_part % 8
+            remainders.append(str(remainder))
+            integer_part //= 8
+        octal_number = ''.join(reversed(remainders))
+
+    if fractional_part > 0:
+        octal_fraction = []
+        count = 0
+        while fractional_part > 0 and count < 10: # Limit precision
+            fractional_part *= 8
+            digit = int(fractional_part)
+            octal_fraction.append(str(digit))
+            fractional_part -= digit
+            count += 1
+        octal_number = octal_number + '.' + ''.join(octal_fraction)
+    return octal_number
 
 def decimal_to_hexadecimal(decimal_input):
     try:
         decimal_number = float(decimal_input)
-        integer_part = int(decimal_number)
-        fractional_part = decimal_number - integer_part
-
-        hex_digits = '0123456789ABCDEF'
-        remainders = []
-
-        if integer_part == 0:
-            hex_number = '0'
-        else:
-            while integer_part > 0:
-                remainder = integer_part % 16
-                remainders.append(hex_digits[remainder])
-                integer_part //= 16
-            hex_number = ''.join(reversed(remainders))
-
-        if fractional_part:
-            hex_fraction = []
-            count = 0
-            while fractional_part > 0 and count < 10:
-                fractional_part *= 16
-                digit = int(fractional_part)
-                hex_fraction.append(hex_digits[digit])
-                fractional_part -= digit
-                count += 1
-            hex_number = hex_number + '.' + ''.join(hex_fraction)
-        return hex_number
     except ValueError:
         return "Invalid decimal input!"
+        
+    integer_part = int(decimal_number)
+    fractional_part = decimal_number - integer_part
 
-def octal_to_binary(octal_input):
-    if octal_input is None:
-        return "Octal input missing!"
-    octal_input = str(octal_input).strip()
-    try:
-        for digit in octal_input:
-            if digit not in ['0','1','2','3','4','5','6','7','.']:
-                return "Invalid Octal Input!"
-        decimal_value = octal_to_decimal(octal_input)
-        if isinstance(decimal_value, str):
-            return decimal_value
-        return decimal_to_binary(str(decimal_value))
-    except:
-        return "Conversion error!"
+    hex_digits = '0123456789ABCDEF'
+    remainders = []
+
+    if integer_part == 0:
+        hex_number = '0'
+    else:
+        while integer_part > 0:
+            remainder = integer_part % 16
+            remainders.append(hex_digits[remainder])
+            integer_part //= 16
+        hex_number = ''.join(reversed(remainders))
+
+    if fractional_part > 0:
+        hex_fraction = []
+        count = 0
+        while fractional_part > 0 and count < 10: # Limit precision
+            fractional_part *= 16
+            digit = int(fractional_part)
+            hex_fraction.append(hex_digits[digit])
+            fractional_part -= digit
+            count += 1
+        hex_number = hex_number + '.' + ''.join(hex_fraction)
+    return hex_number
 
 def octal_to_decimal(octal_input):
     if octal_input is None:
@@ -328,29 +220,109 @@ def octal_to_decimal(octal_input):
     try:
         if octal_input.count('.') > 1:
             return "Invalid octal input!"
-        for ch in octal_input:
-            if ch == '.':
-                continue
+        
+        integer_part = octal_input
+        fractional_part = ""
+        
+        if '.' in octal_input:
+            integer_part, fractional_part = octal_input.split('.')
+            if not integer_part:
+                integer_part = "0"
+            if not fractional_part:
+                fractional_part = "0"
+
+        for ch in integer_part + fractional_part:
             if ch not in '01234567':
                 return "Invalid octal input!"
 
-        if '.' in octal_input:
-            integer_part, fractional_part = octal_input.split('.')
-            result = 0
-            for i in range(len(integer_part)):
-                result += int(integer_part[i]) * (8 ** (len(integer_part) - i - 1))
-            for j in range(len(fractional_part)):
-                result += int(fractional_part[j]) * (8 ** -(j + 1))
-            return result
-        else:
-            result = 0
-            for i in range(len(octal_input)):
-                result += int(octal_input[i]) * (8 ** (len(octal_input) - i - 1))
-            return result
+        result = 0
+        # Convert integer part
+        for i in range(len(integer_part)):
+            result += int(integer_part[i]) * (8 ** (len(integer_part) - i - 1))
+        # Convert fractional part
+        for j in range(len(fractional_part)):
+            result += int(fractional_part[j]) * (8 ** -(j + 1))
+        return result
+        
+    except Exception:
+        return "Conversion error!"
+
+def hexadecimal_to_decimal(hex_input):
+    if hex_input is None:
+        return "Invalid hexadecimal input!"
+    hex_input = str(hex_input).upper().strip()
+    
+    try:
+        hex_digits = '0123456789ABCDEF'
+        
+        integer_part = hex_input
+        fractional_part = ""
+
+        if '.' in hex_input:
+            if hex_input.count('.') > 1:
+                return "Invalid hexadecimal input!"
+            integer_part, fractional_part = hex_input.split('.')
+            if not integer_part:
+                integer_part = "0"
+            if not fractional_part:
+                fractional_part = "0"
+
+        for ch in integer_part + fractional_part:
+            if ch not in hex_digits:
+                return "Invalid hexadecimal input!"
+        
+        result = 0
+        # Convert integer part
+        for i in range(len(integer_part)):
+            result += hex_digits.index(integer_part[i]) * (16 ** (len(integer_part) - i - 1))
+        # Convert fractional part
+        for j in range(len(fractional_part)):
+            result += hex_digits.index(fractional_part[j]) * (16 ** -(j + 1))
+        return result
+    except Exception:
+        return "Invalid hexadecimal input!"
+
+# --- REFACTORED/DRY Functions ---
+# These functions reuse the ones above
+
+def binary_to_octal(binary_input):
+    """
+    Refactored to be DRY (Don't Repeat Yourself).
+    Converts Binary -> Decimal -> Octal.
+    """
+    if binary_input is None:
+        return "Binary input missing!"
+    binary_input = str(binary_input).strip()
+    
+    # 1. First, convert binary to decimal
+    decimal_value = binary_to_decimal(binary_input)
+    
+    if isinstance(decimal_value, str):
+        # This means binary_to_decimal returned an error message
+        return decimal_value
+        
+    # 2. Now, reuse your existing function to convert decimal to octal
+    return decimal_to_octal(str(decimal_value))
+
+def octal_to_binary(octal_input):
+    """
+    Converts Octal -> Decimal -> Binary.
+    """
+    if octal_input is None:
+        return "Octal input missing!"
+    octal_input = str(octal_input).strip()
+    try:
+        decimal_value = octal_to_decimal(octal_input)
+        if isinstance(decimal_value, str):
+            return decimal_value
+        return decimal_to_binary(str(decimal_value))
     except Exception:
         return "Conversion error!"
 
 def octal_to_hexadecimal(octal_input):
+    """
+    Converts Octal -> Decimal -> Hexadecimal.
+    """
     if octal_input is None:
         return "Invalid Octal Input!"
     octal_input = str(octal_input).strip()
@@ -359,62 +331,32 @@ def octal_to_hexadecimal(octal_input):
         if isinstance(decimal_value, str):
             return decimal_value
         return decimal_to_hexadecimal(str(decimal_value))
-    except:
+    except Exception:
         return "Conversion error!"
 
 def hexadecimal_to_binary(hex_input):
+    """
+    Converts Hexadecimal -> Decimal -> Binary.
+    (Note: Direct conversion is often faster, but this reuses code)
+    """
     if hex_input is None:
         return "Invalid hexadecimal input!"
-    hex_input = str(hex_input).upper().strip()
+    hex_input = str(hex_input).strip()
     try:
-        hex_digits = '0123456789ABCDEF'
-        binary_map = {
-            '0': '0000', '1': '0001', '2': '0010', '3': '0011',
-            '4': '0100', '5': '0101', '6': '0110', '7': '0111',
-            '8': '1000', '9': '1001', 'A': '1010', 'B': '1011',
-            'C': '1100', 'D': '1101', 'E': '1110', 'F': '1111'
-        }
+        decimal_value = hexadecimal_to_decimal(hex_input)
+        if isinstance(decimal_value, str):
+            return decimal_value
+        return decimal_to_binary(str(decimal_value))
+    except Exception:
+        return "Conversion error!"
 
-        for ch in hex_input:
-            if ch == '.':
-                continue
-            if ch not in hex_digits:
-                return "Invalid hexadecimal input!"
-
-        if '.' in hex_input:
-            integer_part, fractional_part = hex_input.split('.')
-            bin_integer = ''.join([binary_map[d] for d in integer_part])
-            bin_fraction = ''.join([binary_map[d] for d in fractional_part])
-            return bin_integer + '.' + bin_fraction
-        else:
-            return ''.join([binary_map[d] for d in hex_input])
-    except:
-        return "Invalid hexadecimal input!"
-
-def hexadecimal_to_decimal(hex_input):
-    if hex_input is None:
-        return "Invalid hexadecimal input!"
-    hex_input = str(hex_input).upper().strip()
-    try:
-        hex_digits = '0123456789ABCDEF'
-        if '.' in hex_input:
-            integer_part, fractional_part = hex_input.split('.')
-            result = 0
-            for i in range(len(integer_part)):
-                result += hex_digits.index(integer_part[i]) * (16 ** (len(integer_part) - i - 1))
-            for j in range(len(fractional_part)):
-                result += hex_digits.index(fractional_part[j]) * (16 ** -(j + 1))
-            return result
-        else:
-            result = 0
-            for i in range(len(hex_input)):
-                result += hex_digits.index(hex_input[i]) * (16 ** (len(hex_input) - i - 1))
-            return result
-    except:
-        return "Invalid hexadecimal input!"
 
 def hexadecimal_to_octal(hex_input):
-    if hexadecimal_input is None:
+    """
+    Converts Hexadecimal -> Decimal -> Octal.
+    (FIXED TYPO: hex_input)
+    """
+    if hex_input is None: # Fixed typo here
         return "Invalid hexadecimal input!"
     hex_input = str(hex_input).strip()
     try:
@@ -422,8 +364,66 @@ def hexadecimal_to_octal(hex_input):
         if isinstance(decimal_value, str):
             return decimal_value
         return decimal_to_octal(str(decimal_value))
-    except:
+    except Exception:
         return "Conversion error!"
+
+# --- CONVERSION_MAP (Must be defined AFTER functions) ---
+
+CONVERSION_MAP = {
+    ('binary', 'decimal'): binary_to_decimal,
+    ('binary', 'octal'): binary_to_octal,
+    ('binary', 'hexadecimal'): binary_to_hexadecimal,
+    ('decimal', 'binary'): decimal_to_binary,
+    ('decimal', 'octal'): decimal_to_octal,
+    ('decimal', 'hexadecimal'): decimal_to_hexadecimal,
+    ('octal', 'binary'): octal_to_binary,
+    ('octal', 'decimal'): octal_to_decimal,
+    ('octal', 'hexadecimal'): octal_to_hexadecimal,
+    ('hexadecimal', 'binary'): hexadecimal_to_binary,
+    ('hexadecimal', 'decimal'): hexadecimal_to_decimal,
+    ('hexadecimal', 'octal'): hexadecimal_to_octal,
+}
+
+# --- Flask Routes ---
+
+@app.route('/')
+def home():
+    # This route still renders the full page, which is correct
+    return render_template('index.html', from_option='binary', to_option='decimal')
+
+@app.route('/calculate', methods=['POST'])
+def check_convertion():
+    from_option = request.form.get('from-option')
+    to_option = request.form.get('to-option')
+    input_number = request.form.get('input-number')
+    result = "" # Default result
+
+    # Basic guards
+    if input_number is None or str(input_number).strip() == "":
+        result = "Please enter a number to convert."
+        # *** CHANGED ***
+        # Instead of rendering a template, return JSON
+        return jsonify({'result': result})
+        
+    elif from_option == to_option:
+        result = "You chose the same convertion! Try different one."
+        return jsonify({'result': result})
+        
+    else:
+        # Use the dispatch map
+        conversion_key = (from_option, to_option)
+        
+        if conversion_key in CONVERSION_MAP:
+            # Look up the correct function from the map
+            conversion_function = CONVERSION_MAP[conversion_key]
+            # Call it
+            input_val = str(input_number).strip()
+            result = conversion_function(input_val)
+        else:
+            # This should ideally not be reachable
+            result = "Error: Conversion type not supported."
+    # Return the final result as JSON
+    return jsonify({'result': result})
 
 if __name__ == '__main__':
     app.run(debug=True)
